@@ -184,12 +184,14 @@ body.playing:not(.moved){cursor:none}
   <div id="flash"></div>
   <div id="fade"></div>
 
+  <audio id="birthdayAudio" src="HAPPY BIRTHDAY TO YOU _ PIANO INSTRUMENTAL _ BEST HAPPY BITHDAY MUSIC 2021.mp4" loop preload="auto"></audio>
+
   <div id="menu">
     <div class="card">
       <div class="mini">🎁 Une surprise pour toi</div>
       <h1>SOULAYMANE</h1>
       <p>11 ans&nbsp;! ✨</p>
-      <button class="btn" id="play">▶ Lancer la vidéo</button>
+      <button class="btn" id="play">▶ Lancer la surprise</button>
       <small>Active le son 🔊 · mode plein écran conseillé (touche F)</small>
     </div>
   </div>
@@ -208,6 +210,19 @@ body.playing:not(.moved){cursor:none}
 'use strict';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const body=document.body, stage=$('#stage');
+const audio=$('#birthdayAudio');
+
+async function playMusic(forceRestart=false){
+  if(!audio) return;
+  audio.volume=0.75;
+  audio.muted=false;
+  if(forceRestart){ audio.currentTime=0; }
+  try {
+    await audio.play();
+  } catch (err) {
+    console.warn('Audio autoplay blocked until the first user gesture.', err);
+  }
+}
 
 /* =====================================================
    GRAPHISMES STATIQUES (prénom, gâteau, ballons, cadeaux)
@@ -469,12 +484,14 @@ function reset(){
 function start(){
   if(playing) return;
   reset();
+  playMusic(true);
   startAt=performance.now()+200; playing=true;
   body.classList.add('playing'); $('#menu').classList.add('hidden');
 }
-function restart(){ reset(); start(); }
+function restart(){ reset(); playMusic(true); start(); }
 function finish(){
   playing=false; mode='none'; heartsOn=false;
+  if(audio){ audio.pause(); audio.currentTime=0; }
   body.classList.remove('playing'); $('#endmenu').classList.add('on');
 }
 function fullscreen(){
@@ -482,9 +499,9 @@ function fullscreen(){
   if(!document.fullscreenElement&&!document.webkitFullscreenElement){ (el.requestFullscreen||el.webkitRequestFullscreen||(()=>{})).call(el); }
   else (document.exitFullscreen||document.webkitExitFullscreen||(()=>{})).call(document);
 }
-$('#play').addEventListener('click',start);
-$('#again').addEventListener('click',restart);
-$('#replay').addEventListener('click',()=>{ if(!$('#menu').classList.contains('hidden')) start(); else restart(); });
+$('#play').addEventListener('click',()=>{ playMusic(true); start(); });
+$('#again').addEventListener('click',()=>{ playMusic(true); restart(); });
+$('#replay').addEventListener('click',()=>{ if(!$('#menu').classList.contains('hidden')) { playMusic(true); start(); } else { playMusic(true); restart(); } });
 $('#fsbtn').addEventListener('click',fullscreen);
 addEventListener('keydown',e=>{
   const k=e.key.toLowerCase();
